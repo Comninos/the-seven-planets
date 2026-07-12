@@ -34,23 +34,10 @@ body {
   cursor: grabbing;
 }
 
-.celestial-globe-date-label {
-  position: absolute;
-  top: 12px;
-  left: 16px;
-  color: rgba(217, 224, 242, 1);
-  font-size: 12px;
-  font-family: monospace, 'IM Fell English', serif;
-  pointer-events: none;
-  user-select: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-}
-
 .celestial-globe-time-controls {
   position: absolute;
-  left: 50%;
+  left: 16px;
   bottom: 16px;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -58,7 +45,8 @@ body {
 }
 
 .celestial-globe-date-input {
-  width: 220px;
+  width: 170px;
+  flex: none;
   padding: 6px 10px;
   background: rgba(20, 24, 40, 0.75);
   border: 1px solid rgba(150, 170, 210, 0.4);

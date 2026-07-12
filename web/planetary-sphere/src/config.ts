@@ -71,6 +71,7 @@ export interface GlobeOptions {
 
   // -- Sizes --
   starSizeScale: number;
+  starZoomSizeExponent: number;
   showStarGlow: boolean;
   starGlowDiameterScale: number;
   planetRadius: number;
@@ -111,17 +112,19 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   autoRotateYawRadPerSec: 0.04,
   showPlayButton: true,
 
-  // Globe (scene: initial_view_dec_deg -35, globe_scale_factor 0.7, globe_zoom 1.4)
+  // Globe (scene: initial_view_dec_deg -35, globe_scale_factor 0.7, globe_zoom 1.4;
+  // globe_zoom nudged down to 1.37 here so the disk fits a centered, zero-margin square
+  // viewport at ~96% of the side instead of clipping at ~98%)
   initialViewRaDeg: 0.0,
   initialViewDecDeg: -35.0,
   maxPitchDeg: 70.0,
   globeScaleFactor: 0.7,
-  globeZoom: 1.4,
+  globeZoom: 1.37,
   limbFadeWidth: 0.1,
   dragMomentumScale: 1.0,
   dragSpinFriction: 10.0,
-  uiTopMargin: 44.0,
-  uiBottomMargin: 80.0,
+  uiTopMargin: 0.0,
+  uiBottomMargin: 0.0,
 
   // Selection
   enableConstellationSelection: true,
@@ -171,6 +174,9 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   // Sizes (scene: star_size_scale 1.0, star_glow_diameter_scale 8.0, planet_radius 7,
   // sun_radius 8, moon_radius 8, line widths 0.5, label_font_size 22)
   starSizeScale: 1.0,
+  // Gently scales constellation star core radius by userZoom^starZoomSizeExponent so stars
+  // don't stay a fixed pixel size across the 0.6-4.0 zoom range (no-op at userZoom=1).
+  starZoomSizeExponent: 0.4,
   showStarGlow: true,
   starGlowDiameterScale: 8.0,
   planetRadius: 7.0,
@@ -183,7 +189,7 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   ringSegmentCount: 144, // script default (unused directly; globe outline arc uses 96 segments hardcoded)
   labelFontFamily: 'IM Fell English',
   labelFontUrl: 'assets/fonts/IMFELLEnglish-Regular.ttf',
-  labelFontSize: 22,
+  labelFontSize: 14,
   bodyLabelOffset: { x: 8.0, y: 8.0 },
 
   // Interaction constants (script consts, not @export, but exposed for configurability)

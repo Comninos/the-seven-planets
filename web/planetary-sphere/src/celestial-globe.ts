@@ -84,7 +84,6 @@ export class CelestialGlobe {
   private readonly root: HTMLDivElement;
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
-  private readonly dateLabelEl: HTMLDivElement;
   private readonly dateInputEl: HTMLInputElement;
   private readonly playButtonEl: HTMLButtonElement;
 
@@ -113,7 +112,7 @@ export class CelestialGlobe {
 
   private playing = false;
   private dateInputFocused = false;
-  private lastLabelDayInt: number | null = null;
+  private lastInputDayInt: number | null = null;
   private dateInputShakeTimeout: number | null = null;
 
   private dirty = true;
@@ -144,10 +143,6 @@ export class CelestialGlobe {
       throw new Error('CelestialGlobe: 2D canvas context unavailable.');
     }
     this.ctx = ctx;
-
-    this.dateLabelEl = document.createElement('div');
-    this.dateLabelEl.className = 'celestial-globe-date-label';
-    this.root.appendChild(this.dateLabelEl);
 
     const timeControlsWrap = document.createElement('div');
     timeControlsWrap.className = 'celestial-globe-time-controls';
@@ -208,8 +203,7 @@ export class CelestialGlobe {
     this.orbitalData = orbitalData as OrbitalData | null;
     this.catalog = catalog;
 
-    this.lastLabelDayInt = Math.floor(this.currentJulianDate() + 0.5);
-    this.updateDateLabel();
+    this.lastInputDayInt = Math.floor(this.currentJulianDate() + 0.5);
     this.syncDateInputText();
     this.markDirty();
     this.startLoop();
@@ -497,12 +491,6 @@ export class CelestialGlobe {
   // Date UI
   // ---------------------------------------------------------------------
 
-  private updateDateLabel(): void {
-    const jd = this.currentJulianDate();
-    const date = OM.julianDateToGregorian(jd);
-    this.dateLabelEl.textContent = `${date.day} ${MONTH_NAMES[date.month - 1]} ${date.year}  (JD ${jd.toFixed(1)})`;
-  }
-
   private formatDateForInput(): string {
     const jd = this.currentJulianDate();
     const date = OM.julianDateToGregorian(jd);
@@ -524,7 +512,7 @@ export class CelestialGlobe {
     }
     const jd = OM.julianDateFromGregorian(parsed.year, parsed.month, parsed.day);
     this.dayOffset = jd - this.opts.fixedJulianDate;
-    this.updateDateLabel();
+    this.lastInputDayInt = Math.floor(jd + 0.5);
     this.syncDateInputText();
     this.markDirty();
   }
@@ -568,13 +556,12 @@ export class CelestialGlobe {
   }
 
   private advancePlayback(delta: number): void {
-    const previousLabelDay = this.lastLabelDayInt;
+    const previousInputDay = this.lastInputDayInt;
     this.dayOffset += this.opts.autoAdvanceDaysPerSec * delta;
 
     const dayInt = Math.floor(this.currentJulianDate() + 0.5);
-    if (previousLabelDay === null || dayInt !== previousLabelDay) {
-      this.lastLabelDayInt = dayInt;
-      this.updateDateLabel();
+    if (previousInputDay === null || dayInt !== previousInputDay) {
+      this.lastInputDayInt = dayInt;
       this.syncDateInputText();
     }
 
@@ -829,7 +816,8 @@ export class CelestialGlobe {
           if (fade <= 0.0) continue;
           const pos = this.screenFromViewPos(viewPos, center, radius);
           const magnitude = star.mag ?? 3.0;
-          const coreRadius = clamp((4.2 - magnitude * 0.9) * this.opts.starSizeScale, 1.0, 6.0);
+          const clampedCoreRadius = clamp((4.2 - magnitude * 0.9) * this.opts.starSizeScale, 1.0, 6.0);
+          const coreRadius = clampedCoreRadius * Math.pow(this.userZoom, this.opts.starZoomSizeExponent);
           this.drawStar(ctx, pos, coreRadius, this.opts.starColor, fade);
         }
       }
@@ -1094,8 +1082,7 @@ export class CelestialGlobe {
 
   setDate(jd: number): void {
     this.dayOffset = jd - this.opts.fixedJulianDate;
-    this.lastLabelDayInt = Math.floor(jd + 0.5);
-    this.updateDateLabel();
+    this.lastInputDayInt = Math.floor(jd + 0.5);
     this.syncDateInputText();
     this.markDirty();
   }
