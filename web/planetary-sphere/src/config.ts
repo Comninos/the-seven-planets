@@ -180,7 +180,7 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   starZoomSizeExponent: 0.4,
   // Gently scales star size with viewport size (pow(minDim/700, exponent)) so stars don't
   // look oversized on small phone screens or undersized on large displays.
-  starScreenSizeExponent: 0.5,
+  starScreenSizeExponent: 0.8,
   showStarGlow: true,
   starGlowDiameterScale: 8.0,
   planetRadius: 7.0,
