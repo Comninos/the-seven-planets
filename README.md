@@ -5,10 +5,8 @@ constellations, the ecliptic, the celestial poles, and the historically-accurate
 positions of the Sun, Moon, and the five classical planets for any date
 (Julian calendar before the October 1582 reform, Gregorian after).
 
-Ported from a UI screen in the Godot game *Project Epitaph* (the original GDScript
-reference code is preserved in this repo's initial commit). Despite looking 3D,
-everything is a pure math projection drawn on a 2D `<canvas>` — no WebGL, no
-runtime dependencies.
+Despite looking 3D, everything is a pure math projection drawn on a 2D `<canvas>`
+— no WebGL, no runtime dependencies.
 
 ## Widget (`web/planetary-sphere/`)
 
