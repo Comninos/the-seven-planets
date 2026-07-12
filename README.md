@@ -1,6 +1,6 @@
 # The Seven Planets
 
-An interactive, orthographic star map showing constellations, the ecliptic, the celestial poles, and the historically-accurate positions of the seven classical planets for any date (Julian calendar before the October 1582 reform, Gregorian after).
+An interactive, orthographic star map showing constellations, the ecliptic, the celestial poles, and historically-accurate positions of the seven classical planets for any date (Julian calendar before the October 1582 reform, Gregorian after).
 
 Despite looking 3D, everything is a pure math projection drawn on a 2D `<canvas>`. No WebGL, no runtime dependencies.
 
