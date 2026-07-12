@@ -72,6 +72,7 @@ export interface GlobeOptions {
   // -- Sizes --
   starSizeScale: number;
   starZoomSizeExponent: number;
+  starScreenSizeExponent: number;
   showStarGlow: boolean;
   starGlowDiameterScale: number;
   planetRadius: number;
@@ -177,6 +178,9 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   // Gently scales constellation star core radius by userZoom^starZoomSizeExponent so stars
   // don't stay a fixed pixel size across the 0.6-4.0 zoom range (no-op at userZoom=1).
   starZoomSizeExponent: 0.4,
+  // Gently scales star size with viewport size (pow(minDim/700, exponent)) so stars don't
+  // look oversized on small phone screens or undersized on large displays.
+  starScreenSizeExponent: 0.5,
   showStarGlow: true,
   starGlowDiameterScale: 8.0,
   planetRadius: 7.0,

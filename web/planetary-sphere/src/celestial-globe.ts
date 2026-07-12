@@ -61,6 +61,9 @@ const MONTH_ABBR_TO_NUM: Record<string, number> = {
   dec: 12,
 };
 
+/** Viewport min-dimension at which stars render at their configured base size. */
+const STAR_SIZE_REFERENCE_PX = 700;
+
 interface PointerSample {
   t: number;
   x: number;
@@ -794,8 +797,25 @@ export class CelestialGlobe {
     ctx.stroke();
   }
 
+  /**
+   * Gentle star scaling with viewport size: pow(minDim / 700, exponent), so stars shrink a
+   * bit on phones and grow a bit on large screens without tracking the globe 1:1. Clamped so
+   * extreme viewports (tiny embeds, 4K fullscreen) stay reasonable.
+   */
+  private starScreenSizeFactor(): number {
+    const usable = this.usableViewportSize();
+    const minDim = Math.min(usable.x, usable.y);
+    return clamp(
+      Math.pow(minDim / STAR_SIZE_REFERENCE_PX, this.opts.starScreenSizeExponent),
+      0.5,
+      1.5
+    );
+  }
+
   private drawConstellations(ctx: CanvasRenderingContext2D, center: Vec2, radius: number, basis: Basis): void {
     if (!this.catalog) return;
+    const starSizeFactor =
+      Math.pow(this.userZoom, this.opts.starZoomSizeExponent) * this.starScreenSizeFactor();
     for (const constellation of this.catalog.constellations) {
       if (this.opts.showConstellationLines) {
         for (const segment of constellation.lines) {
@@ -817,7 +837,7 @@ export class CelestialGlobe {
           const pos = this.screenFromViewPos(viewPos, center, radius);
           const magnitude = star.mag ?? 3.0;
           const clampedCoreRadius = clamp((4.2 - magnitude * 0.9) * this.opts.starSizeScale, 1.0, 6.0);
-          const coreRadius = clampedCoreRadius * Math.pow(this.userZoom, this.opts.starZoomSizeExponent);
+          const coreRadius = clampedCoreRadius * starSizeFactor;
           this.drawStar(ctx, pos, coreRadius, this.opts.starColor, fade);
         }
       }
