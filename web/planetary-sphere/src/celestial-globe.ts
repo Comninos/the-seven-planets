@@ -98,6 +98,11 @@ export class CelestialGlobe {
   private orbitalData: OrbitalData | null = null;
   private catalog: ConstellationCatalog | null = null;
   private starGlowSprite: HTMLCanvasElement | null = null;
+  // Fake-lighting layers pre-rendered once (they never change) and blitted scaled to
+  // the disk each frame, so the sphere shading costs one drawImage instead of rebuilding
+  // gradients and filling the disk every frame.
+  private globeShadingSprite: HTMLCanvasElement | null = null;
+  private globeRimSprite: HTMLCanvasElement | null = null;
 
   private dayOffset = 0;
   private globeYaw = 0;
@@ -189,6 +194,10 @@ export class CelestialGlobe {
     this.setupResize();
 
     this.starGlowSprite = buildStarGlowSprite(this.opts.starColor);
+    if (this.opts.showGlobeShading) {
+      this.globeShadingSprite = buildGlobeShadingSprite(this.opts);
+      this.globeRimSprite = buildGlobeRimSprite(this.opts);
+    }
 
     void this.init();
   }
@@ -828,58 +837,25 @@ export class CelestialGlobe {
   }
 
   /**
-   * Non-physical shading to sell the spherical form: a concentric limb-darkening that
-   * rounds off the edge plus an offset diffuse hotspot on the lit side. Both are plain
-   * radial gradients clipped to the disk -- no normals, no light math, nothing dynamic.
+   * Blits the pre-rendered spherical shading (limb darkening + offset diffuse hotspot)
+   * scaled to the disk. Drawn under the celestial content via normal source-over.
    */
   private drawGlobeShading(ctx: CanvasRenderingContext2D, center: Vec2, radius: number): void {
-    const box = { x: center.x - radius, y: center.y - radius, size: radius * 2 };
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
-    ctx.clip();
-
-    // Limb darkening: transparent through the core, ramping to a dark rim.
-    if (this.opts.globeShadowStrength > 0) {
-      const shade = ctx.createRadialGradient(center.x, center.y, radius * 0.35, center.x, center.y, radius);
-      shade.addColorStop(0.0, 'rgba(0, 0, 0, 0)');
-      shade.addColorStop(0.7, 'rgba(0, 0, 0, 0)');
-      shade.addColorStop(1.0, toCssRgba({ r: 0, g: 0, b: 0, a: 1 }, this.opts.globeShadowStrength));
-      ctx.fillStyle = shade;
-      ctx.fillRect(box.x, box.y, box.size, box.size);
-    }
-
-    // Diffuse hotspot: a soft tinted highlight offset toward the light source.
-    if (this.opts.globeHighlightStrength > 0) {
-      const dir = normalizeScreenDir(this.opts.globeLightDir);
-      const hx = center.x - dir.x * radius * 0.45;
-      const hy = center.y - dir.y * radius * 0.45;
-      const hi = ctx.createRadialGradient(hx, hy, 0, hx, hy, radius * 1.15);
-      hi.addColorStop(0.0, toCssRgba(this.opts.globeLightColor, this.opts.globeHighlightStrength));
-      hi.addColorStop(0.55, toCssRgba(this.opts.globeLightColor, 0));
-      ctx.fillStyle = hi;
-      ctx.fillRect(box.x, box.y, box.size, box.size);
-    }
-
-    ctx.restore();
+    if (!this.globeShadingSprite) return;
+    const d = radius * 2;
+    ctx.drawImage(this.globeShadingSprite, center.x - radius, center.y - radius, d, d);
   }
 
   /**
-   * Additive rim/fresnel ring hugging the limb. Fades back to zero exactly at the edge
-   * so it never hardens the silhouette beyond the outline stroke.
+   * Blits the pre-rendered rim/fresnel ring additively so it brightens the silhouette.
+   * The sprite fades to zero at its edge, so it never hardens the outline.
    */
   private drawGlobeRim(ctx: CanvasRenderingContext2D, center: Vec2, radius: number): void {
-    if (this.opts.globeRimStrength <= 0) return;
+    if (!this.globeRimSprite) return;
+    const d = radius * 2;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    const rim = ctx.createRadialGradient(center.x, center.y, radius * 0.8, center.x, center.y, radius);
-    rim.addColorStop(0.0, toCssRgba(this.opts.globeLightColor, 0));
-    rim.addColorStop(0.92, toCssRgba(this.opts.globeLightColor, this.opts.globeRimStrength));
-    rim.addColorStop(1.0, toCssRgba(this.opts.globeLightColor, 0));
-    ctx.beginPath();
-    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = rim;
-    ctx.fill();
+    ctx.drawImage(this.globeRimSprite, center.x - radius, center.y - radius, d, d);
     ctx.restore();
   }
 
@@ -1372,6 +1348,74 @@ function buildStarGlowSprite(tint: RGBA): HTMLCanvasElement {
   gradient.addColorStop(1.0, toCssRgba(tint, 0.0));
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
+  return canvas;
+}
+
+/** Off-screen resolution of the baked globe-lighting sprites (scaled to the disk on blit). */
+const GLOBE_LIGHTING_SPRITE_SIZE = 512;
+
+/**
+ * Bakes the source-over shading layer once: concentric limb darkening plus an offset
+ * diffuse hotspot toward the light, clipped to a unit disk. Blitted scaled to the globe.
+ */
+function buildGlobeShadingSprite(opts: GlobeOptions): HTMLCanvasElement {
+  const size = GLOBE_LIGHTING_SPRITE_SIZE;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const c = size / 2;
+  const r = size / 2;
+
+  ctx.beginPath();
+  ctx.arc(c, c, r, 0, Math.PI * 2);
+  ctx.clip();
+
+  if (opts.globeShadowStrength > 0) {
+    const shade = ctx.createRadialGradient(c, c, r * 0.35, c, c, r);
+    shade.addColorStop(0.0, 'rgba(0, 0, 0, 0)');
+    shade.addColorStop(0.7, 'rgba(0, 0, 0, 0)');
+    shade.addColorStop(1.0, toCssRgba({ r: 0, g: 0, b: 0, a: 1 }, opts.globeShadowStrength));
+    ctx.fillStyle = shade;
+    ctx.fillRect(0, 0, size, size);
+  }
+
+  if (opts.globeHighlightStrength > 0) {
+    const dir = normalizeScreenDir(opts.globeLightDir);
+    const hx = c - dir.x * r * 0.45;
+    const hy = c - dir.y * r * 0.45;
+    const hi = ctx.createRadialGradient(hx, hy, 0, hx, hy, r * 1.15);
+    hi.addColorStop(0.0, toCssRgba(opts.globeLightColor, opts.globeHighlightStrength));
+    hi.addColorStop(0.55, toCssRgba(opts.globeLightColor, 0));
+    ctx.fillStyle = hi;
+    ctx.fillRect(0, 0, size, size);
+  }
+
+  return canvas;
+}
+
+/**
+ * Bakes the additive rim/fresnel ring once. Colors are pre-tinted; the sprite is blitted
+ * with the 'lighter' composite so it adds to whatever lies beneath near the limb.
+ */
+function buildGlobeRimSprite(opts: GlobeOptions): HTMLCanvasElement {
+  const size = GLOBE_LIGHTING_SPRITE_SIZE;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const c = size / 2;
+  const r = size / 2;
+
+  const rim = ctx.createRadialGradient(c, c, r * 0.8, c, c, r);
+  rim.addColorStop(0.0, toCssRgba(opts.globeLightColor, 0));
+  rim.addColorStop(0.92, toCssRgba(opts.globeLightColor, opts.globeRimStrength));
+  rim.addColorStop(1.0, toCssRgba(opts.globeLightColor, 0));
+  ctx.beginPath();
+  ctx.arc(c, c, r, 0, Math.PI * 2);
+  ctx.fillStyle = rim;
+  ctx.fill();
+
   return canvas;
 }
 
