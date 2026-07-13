@@ -61,8 +61,8 @@ The constellation data and much of the implementation logic are based on **[d3-c
 
 Specifically:
 
-- `constellations.lines.json` — the star-to-star lines that make up each constellation figure, from d3-celestial.
-- `constellations.json` — constellation names and ranking, from d3-celestial.
+- `constellations.lines.json`: the star-to-star lines that make up each constellation figure, from d3-celestial.
+- `constellations.json`: constellation names and ranking, from d3-celestial.
 
 Both files use positions at the J2000 epoch, with right ascension expressed as longitude from −180° to 180° (the GeoJSON convention used by d3-celestial). The approach to loading, clipping, projecting, and drawing this sky data also follows d3-celestial's design.
 
@@ -70,5 +70,4 @@ The planetary orbital elements (`orbital_elements.json`) come from NASA/JPL's "K
 
 ## License
 
-This project is released under the [MIT License](LICENSE). The bundled d3-celestial data remain under their original BSD (3-Clause) license, as noted above.
-
+This project is released under the [MIT License](LICENSE). The bundled d3-celestial data remain under their original BSD (3-Clause) license.
