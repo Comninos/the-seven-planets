@@ -47,7 +47,13 @@ npm run dev      # start the dev server
 npm run build    # type-check and produce a static build in dist/
 ```
 
-The build in `dist/` is a self-contained static page — embed it anywhere with an `<iframe>`.
+The build in `dist/` is a self-contained static page. You can embed it like this:
+
+```
+<iframe src="https://comninos.github.io/the-seven-planets/"
+        style="width:100%; aspect-ratio:1/1; height:auto; border:none; border-radius:0px;"
+        loading="lazy"></iframe>
+```
 
 ## Data sources and credits
 
