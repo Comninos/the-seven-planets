@@ -60,9 +60,6 @@ export interface GlobeOptions {
   // -- Colors (0..1 float channels) --
   backgroundColor: RGBA;
   globeFillColor: RGBA;
-  // Sphere fill used instead of globeFillColor when the page prefers a light
-  // color scheme, so the disk doesn't read as a dark smudge on a light backdrop.
-  globeFillColorLight: RGBA;
   globeOutlineColor: RGBA;
   eclipticColor: RGBA;
   constellationLineColor: RGBA;
@@ -172,13 +169,6 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   // through; set alpha to 1 to have the canvas paint this color itself.
   backgroundColor: color(0.005945804, 0.007432931, 0.019723443, 0.0),
   globeFillColor: color(0.055, 0.056, 0.12),
-  // Hand-tuned companion swatch for light backdrops: each channel of
-  // globeFillColor lifted by a flat +0.08, which raises lightness
-  // (8.75% -> 16.75%) while holding the R/G/B spread -- and so the chroma --
-  // exactly constant. Boosting HSL saturation instead overshot, since chroma
-  // rises on its own as lightness moves toward the 50% midpoint; this keeps
-  // the same perceptual saturation as the dark navy, just lighter.
-  globeFillColorLight: color(0.135, 0.136, 0.2),
   globeOutlineColor: color(0.35, 0.42, 0.58, 0.55), // script default (scene doesn't override)
   eclipticColor: color(0.935792, 0.628446, 0.2767423, 1.0),
   constellationLineColor: color(0.54901963, 0.6509804, 0.8509804, 0.38039216),

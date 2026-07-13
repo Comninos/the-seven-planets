@@ -133,11 +133,6 @@ export class CelestialGlobe {
   private resizeObserver: ResizeObserver | null = null;
   private readonly listeners = new Set<(id: string) => void>();
 
-  private colorSchemeQuery: MediaQueryList | null = null;
-  private readonly onColorSchemeChange = (): void => {
-    this.markDirty();
-  };
-
   constructor(mount: HTMLElement, options?: Partial<GlobeOptions>) {
     this.opts = { ...DEFAULT_OPTIONS, ...options };
     this.mount = mount;
@@ -192,7 +187,6 @@ export class CelestialGlobe {
     this.setupTimeUi();
     this.setupInput();
     this.setupResize();
-    this.setupColorScheme();
 
     this.starGlowSprite = buildStarGlowSprite(this.opts.starColor);
 
@@ -318,21 +312,6 @@ export class CelestialGlobe {
     });
     this.resizeObserver.observe(this.root);
     this.resizeCanvas();
-  }
-
-  /**
-   * Tracks the embedding page's light/dark preference so the globe fill can
-   * brighten in light mode. Reads `prefers-color-scheme` directly rather than
-   * CSS, since the fill is painted on canvas.
-   */
-  private setupColorScheme(): void {
-    if (typeof window.matchMedia !== 'function') return;
-    this.colorSchemeQuery = window.matchMedia('(prefers-color-scheme: light)');
-    this.colorSchemeQuery.addEventListener('change', this.onColorSchemeChange);
-  }
-
-  private prefersLightScheme(): boolean {
-    return this.colorSchemeQuery?.matches ?? false;
   }
 
   private resizeCanvas(): void {
@@ -830,10 +809,9 @@ export class CelestialGlobe {
   }
 
   private drawGlobeDisk(ctx: CanvasRenderingContext2D, center: Vec2, radius: number): void {
-    const fill = this.prefersLightScheme() ? this.opts.globeFillColorLight : this.opts.globeFillColor;
     ctx.beginPath();
     ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = toCssRgba(fill);
+    ctx.fillStyle = toCssRgba(this.opts.globeFillColor);
     ctx.fill();
   }
 
@@ -1214,7 +1192,6 @@ export class CelestialGlobe {
       window.clearTimeout(this.dateInputShakeTimeout);
     }
     this.resizeObserver?.disconnect();
-    this.colorSchemeQuery?.removeEventListener('change', this.onColorSchemeChange);
     this.root.remove();
   }
 }
