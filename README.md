@@ -1,3 +1,11 @@
+---
+date_created: 2026-07-12
+---
+<iframe src="https://comninos.github.io/the-seven-planets/"
+        style="width:100%; aspect-ratio:1/1; height:auto; border:none; border-radius:0px;"
+        loading="lazy"></iframe>
+
+---
 # The Seven Planets
 
 A map of the night sky. It draws the constellations on a sphere and shows where the seven classical planets: Sun, Moon, Mercury, Venus, Mars, Jupiter, and Saturn. They are positioned relative to the constellations at any date you choose.
@@ -11,9 +19,9 @@ The sky is shown as a globe you look at from the outside, an orthographic, spher
 - **Constellations** are drawn as connected star-to-star lines.
 - **The ecliptic** is the path the Sun appears to trace through the year. It is drawn as a gold ring. The planets always stay close to this line (they orbit the Sun), which is why they only ever appear in the zodiac constellations, and nowhere else in the sky.
 - **The celestial poles**, NCP and SCP are marked and serve as the axis for spinning the globe.
-- **The seven planets** (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn) are placed at their correct positions for the chosen date and labelled.
+- **The seven planets** are placed at their correct positions for the chosen date and labelled.
 
-You can drag to rotate the globe, zoom, and type in a date (for example `29 May 1453`). You can also toggle the date auto-advance and the slow spinning force.
+You can drag to rotate the globe, zoom, and type in a date. You can also toggle the date auto-advance and the slow spinning force.
 
 By default it opens on **29 May 1453**, the day of the fall of Constantinople.
 
@@ -21,7 +29,7 @@ Despite looking 3D, everything is plain mathematics drawn onto a flat 2D `<canva
 
 ## Inaccuracies and limitations
 
-This is meant to be an intuitive, attractive overview, not a precise map. The limitations are an intentional part of the work, which sits within an ancient human tradition of producing innacurate star maps.
+This is meant to be an intuitive, attractive overview, not a precise map. The limitations are an intentional part of the work, which sits within an ancient human tradition of producing inaccurate star maps.
 
 - **Approximate planet positions.** The orbital-element method is only good to roughly arc-minute accuracy near our own era, and it drifts as you move away from the year 2000. The further back or forward in time you go, the less trustworthy the planet positions become.
 - **Low-precision Moon.** The Moon uses a short formula accurate to only about a tenth of a degree (a few times the Moon's own width). It's fine for showing which constellation the Moon is near.
@@ -57,3 +65,4 @@ The planetary orbital elements (`orbital_elements.json`) come from NASA/JPL's "K
 ## License
 
 This project is released under the [MIT License](LICENSE). The bundled d3-celestial data remain under their original BSD (3-Clause) license, as noted above.
+
