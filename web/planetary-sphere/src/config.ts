@@ -155,7 +155,9 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   showPoleLabels: true,
 
   // Colors -- scene-effective values (exact Color(...) from the .tscn where overridden)
-  backgroundColor: color(0.005945804, 0.007432931, 0.019723443),
+  // Alpha 0 leaves the canvas transparent so the element's CSS background shows
+  // through; set alpha to 1 to have the canvas paint this color itself.
+  backgroundColor: color(0.005945804, 0.007432931, 0.019723443, 0.0),
   globeFillColor: color(0.029687967, 0.029691454, 0.0678673),
   globeOutlineColor: color(0.35, 0.42, 0.58, 0.55), // script default (scene doesn't override)
   eclipticColor: color(0.935792, 0.628446, 0.2767423, 1.0),

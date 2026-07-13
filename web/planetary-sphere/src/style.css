@@ -1,9 +1,21 @@
+:root {
+  /* Widget background. Override this variable (or toggle the color scheme) to
+     re-theme the globe's backdrop; the canvas itself is transparent. */
+  --celestial-globe-background: #010208;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --celestial-globe-background: #eef1f8;
+  }
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #010208;
+  background: var(--celestial-globe-background);
 }
 
 #app {
@@ -18,6 +30,7 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background: var(--celestial-globe-background);
   font-family: 'IM Fell English', serif;
 }
 

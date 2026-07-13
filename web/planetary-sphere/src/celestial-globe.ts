@@ -711,9 +711,13 @@ export class CelestialGlobe {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, size.x, size.y);
 
-    // 1. Background fill.
-    ctx.fillStyle = toCssRgba(this.opts.backgroundColor);
-    ctx.fillRect(0, 0, size.x, size.y);
+    // 1. Background fill. When the configured background is transparent we leave
+    // the canvas cleared so the element's CSS background shows through (letting a
+    // page-level light/dark theme drive the widget background).
+    if (this.opts.backgroundColor.a > 0) {
+      ctx.fillStyle = toCssRgba(this.opts.backgroundColor);
+      ctx.fillRect(0, 0, size.x, size.y);
+    }
 
     if (!this.orbitalData) {
       ctx.restore();
