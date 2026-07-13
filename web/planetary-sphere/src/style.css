@@ -43,14 +43,16 @@ body {
   cursor: grabbing;
 }
 
-/* Playback controls: chrome-free and faint by default, tucked into the corner.
-   Colors use a neutral mid-slate so they stay legible on both light and dark
-   backdrops; the whole cluster lifts to full opacity on hover/focus. */
+/* Playback controls: chrome-free and tucked into the corner. Legible at rest via
+   a neutral mid-slate that reads on both light and dark backdrops; hovering an
+   element accents it in blue. */
 .celestial-globe-time-controls {
   /* Cool mid-slate at ~0.52 luminance (matches constellationLabelColor): sits
      roughly equidistant from white and black so the date label and controls
      stay legible against both light and dark backdrops. */
   --celestial-globe-control-color: 128, 133, 145;
+  /* Blue accent applied on hover/focus. */
+  --celestial-globe-control-hover: 110, 165, 235;
   position: absolute;
   left: 10px;
   bottom: 8px;
@@ -58,13 +60,6 @@ body {
   flex-direction: row;
   align-items: center;
   gap: 2px;
-  opacity: 0.5;
-  transition: opacity 0.2s ease;
-}
-
-.celestial-globe-time-controls:hover,
-.celestial-globe-time-controls:focus-within {
-  opacity: 1;
 }
 
 .celestial-globe-date-input {
@@ -79,11 +74,13 @@ body {
   font-size: 13px;
   text-align: left;
   outline: none;
+  transition: color 0.15s ease, border-bottom-color 0.15s ease;
 }
 
 .celestial-globe-date-input:hover,
 .celestial-globe-date-input:focus {
-  border-bottom-color: rgba(var(--celestial-globe-control-color), 0.5);
+  color: rgba(var(--celestial-globe-control-hover), 1);
+  border-bottom-color: rgba(var(--celestial-globe-control-hover), 0.6);
 }
 
 .celestial-globe-date-input[hidden] {
@@ -118,15 +115,16 @@ body {
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
-  opacity: 0.35;
-  transition: opacity 0.15s ease;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, color 0.15s ease;
 }
 
 .celestial-globe-control-button--active {
-  opacity: 0.75;
+  opacity: 0.9;
 }
 
 .celestial-globe-control-button:hover {
+  color: rgba(var(--celestial-globe-control-hover), 1);
   opacity: 1;
 }
 
