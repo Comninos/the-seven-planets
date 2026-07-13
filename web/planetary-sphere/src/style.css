@@ -47,7 +47,10 @@ body {
    Colors use a neutral mid-slate so they stay legible on both light and dark
    backdrops; the whole cluster lifts to full opacity on hover/focus. */
 .celestial-globe-time-controls {
-  --celestial-globe-control-color: 150, 162, 186;
+  /* Cool mid-slate at ~0.52 luminance (matches constellationLabelColor): sits
+     roughly equidistant from white and black so the date label and controls
+     stay legible against both light and dark backdrops. */
+  --celestial-globe-control-color: 128, 133, 145;
   position: absolute;
   left: 10px;
   bottom: 8px;
