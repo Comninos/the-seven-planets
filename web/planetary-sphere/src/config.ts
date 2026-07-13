@@ -157,7 +157,7 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   showGlobeShading: true,
   globeLightDir: { x: -0.55, y: -0.8 },
   globeLightColor: color(0.7, 0.82, 1.0),
-  globeHighlightStrength: 0.8,
+  globeHighlightStrength: 0.08,
   globeShadowStrength: 0.4,
   globeRimStrength: 0.12,
 
