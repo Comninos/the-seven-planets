@@ -8,7 +8,7 @@ date_created: 2026-07-12
 ---
 # The Seven Planets
 
-A map of the night sky. It draws the constellations on a sphere and shows where the seven classical planets: Sun, Moon, Mercury, Venus, Mars, Jupiter, and Saturn. They are positioned relative to the constellations at any date you choose.
+A map of the night sky. It draws the constellations on a sphere and shows where the seven classical planets are positioned at any date you choose.
 
 The purpose is to present the entire sky in a way that feels natural to look at, and let you scrub through time to watch the planets wander among the stars.
 
