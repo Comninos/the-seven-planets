@@ -74,6 +74,10 @@ export interface CelestialGlobeHandle {
   destroy(): void;
   setDate(jd: number): void;
   getSelectedConstellation(): string | null;
+  setDateAdvancing(active: boolean): void;
+  setSpinning(active: boolean): void;
+  isDateAdvancing(): boolean;
+  isSpinning(): boolean;
   play(): void;
   pause(): void;
   isPlaying(): boolean;
@@ -88,7 +92,8 @@ export class CelestialGlobe {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
   private readonly dateInputEl: HTMLInputElement;
-  private readonly playButtonEl: HTMLButtonElement;
+  private readonly spinButtonEl: HTMLButtonElement;
+  private readonly advanceButtonEl: HTMLButtonElement;
 
   private orbitalData: OrbitalData | null = null;
   private catalog: ConstellationCatalog | null = null;
@@ -113,7 +118,8 @@ export class CelestialGlobe {
 
   private selectedConstellationId: string | null = null;
 
-  private playing = false;
+  private dateAdvancing = false;
+  private spinning = false;
   private dateInputFocused = false;
   private lastInputDayInt: number | null = null;
   private dateInputShakeTimeout: number | null = null;
@@ -150,20 +156,29 @@ export class CelestialGlobe {
     const timeControlsWrap = document.createElement('div');
     timeControlsWrap.className = 'celestial-globe-time-controls';
 
-    this.playButtonEl = document.createElement('button');
-    this.playButtonEl.className = 'celestial-globe-play-button';
-    this.playButtonEl.type = 'button';
-    this.playButtonEl.textContent = '▶';
-    this.playButtonEl.setAttribute('aria-label', 'Play');
-
     this.dateInputEl = document.createElement('input');
     this.dateInputEl.type = 'text';
     this.dateInputEl.className = 'celestial-globe-date-input';
     this.dateInputEl.spellcheck = false;
     this.dateInputEl.autocomplete = 'off';
 
+    this.advanceButtonEl = document.createElement('button');
+    this.advanceButtonEl.className = 'celestial-globe-control-button';
+    this.advanceButtonEl.type = 'button';
+    this.advanceButtonEl.textContent = '▶';
+    this.advanceButtonEl.title = 'Advance date';
+    this.advanceButtonEl.setAttribute('aria-label', 'Advance date');
+
+    this.spinButtonEl = document.createElement('button');
+    this.spinButtonEl.className = 'celestial-globe-control-button';
+    this.spinButtonEl.type = 'button';
+    this.spinButtonEl.textContent = '↻';
+    this.spinButtonEl.title = 'Spin globe';
+    this.spinButtonEl.setAttribute('aria-label', 'Spin globe');
+
     timeControlsWrap.appendChild(this.dateInputEl);
-    timeControlsWrap.appendChild(this.playButtonEl);
+    timeControlsWrap.appendChild(this.advanceButtonEl);
+    timeControlsWrap.appendChild(this.spinButtonEl);
     this.root.appendChild(timeControlsWrap);
 
     this.mount.appendChild(this.root);
@@ -243,8 +258,14 @@ export class CelestialGlobe {
   }
 
   private setupTimeUi(): void {
+    this.dateAdvancing = this.opts.autoAdvanceActive;
+    this.spinning = this.opts.autoRotateActive;
+
+    const buttonsHidden = !this.opts.showTimeUi || !this.opts.showPlaybackButtons;
     this.dateInputEl.hidden = !this.opts.showTimeUi;
-    this.playButtonEl.hidden = !this.opts.showTimeUi || !this.opts.showPlayButton;
+    this.advanceButtonEl.hidden = buttonsHidden;
+    this.spinButtonEl.hidden = buttonsHidden;
+    this.updateControlButtons();
 
     this.syncDateInputText();
 
@@ -268,13 +289,20 @@ export class CelestialGlobe {
       this.commitDateInput();
     });
 
-    this.playButtonEl.addEventListener('click', () => {
-      if (this.playing) {
-        this.pause();
-      } else {
-        this.play();
-      }
+    this.advanceButtonEl.addEventListener('click', () => {
+      this.setDateAdvancing(!this.dateAdvancing);
     });
+
+    this.spinButtonEl.addEventListener('click', () => {
+      this.setSpinning(!this.spinning);
+    });
+  }
+
+  private updateControlButtons(): void {
+    this.advanceButtonEl.classList.toggle('celestial-globe-control-button--active', this.dateAdvancing);
+    this.advanceButtonEl.setAttribute('aria-pressed', String(this.dateAdvancing));
+    this.spinButtonEl.classList.toggle('celestial-globe-control-button--active', this.spinning);
+    this.spinButtonEl.setAttribute('aria-pressed', String(this.spinning));
   }
 
   private setupResize(): void {
@@ -538,27 +566,44 @@ export class CelestialGlobe {
   // Play / pause
   // ---------------------------------------------------------------------
 
-  play(): void {
-    if (this.playing) return;
-    this.playing = true;
-    this.playButtonEl.textContent = '⏸';
-    this.playButtonEl.setAttribute('aria-label', 'Pause');
+  setDateAdvancing(active: boolean): void {
+    if (this.dateAdvancing === active) return;
+    this.dateAdvancing = active;
+    this.updateControlButtons();
     this.markDirty();
+  }
+
+  setSpinning(active: boolean): void {
+    if (this.spinning === active) return;
+    this.spinning = active;
+    this.updateControlButtons();
+    this.markDirty();
+  }
+
+  isDateAdvancing(): boolean {
+    return this.dateAdvancing;
+  }
+
+  isSpinning(): boolean {
+    return this.spinning;
+  }
+
+  /** Legacy convenience: drives both the date advance and spin together. */
+  play(): void {
+    this.setDateAdvancing(true);
+    this.setSpinning(true);
   }
 
   pause(): void {
-    if (!this.playing) return;
-    this.playing = false;
-    this.playButtonEl.textContent = '▶';
-    this.playButtonEl.setAttribute('aria-label', 'Play');
-    this.markDirty();
+    this.setDateAdvancing(false);
+    this.setSpinning(false);
   }
 
   isPlaying(): boolean {
-    return this.playing;
+    return this.dateAdvancing || this.spinning;
   }
 
-  private advancePlayback(delta: number): void {
+  private advanceDate(delta: number): void {
     const previousInputDay = this.lastInputDayInt;
     this.dayOffset += this.opts.autoAdvanceDaysPerSec * delta;
 
@@ -567,10 +612,11 @@ export class CelestialGlobe {
       this.lastInputDayInt = dayInt;
       this.syncDateInputText();
     }
+  }
 
-    if (!this.dragging) {
-      this.globeYaw = this.normalizeYaw(this.globeYaw + this.opts.autoRotateYawRadPerSec * delta);
-    }
+  private advanceSpin(delta: number): void {
+    if (this.dragging) return;
+    this.globeYaw = this.normalizeYaw(this.globeYaw + this.opts.autoRotateYawRadPerSec * delta);
   }
 
   // ---------------------------------------------------------------------
@@ -680,8 +726,13 @@ export class CelestialGlobe {
   }
 
   private tick(delta: number): void {
-    if (this.playing) {
-      this.advancePlayback(delta);
+    if (this.dateAdvancing) {
+      this.advanceDate(delta);
+      this.markDirty();
+    }
+
+    if (this.spinning) {
+      this.advanceSpin(delta);
       this.markDirty();
     }
 
@@ -1258,6 +1309,10 @@ export function createCelestialGlobe(
     destroy: () => globe.destroy(),
     setDate: (jd: number) => globe.setDate(jd),
     getSelectedConstellation: () => globe.getSelectedConstellation(),
+    setDateAdvancing: (active: boolean) => globe.setDateAdvancing(active),
+    setSpinning: (active: boolean) => globe.setSpinning(active),
+    isDateAdvancing: () => globe.isDateAdvancing(),
+    isSpinning: () => globe.isSpinning(),
     play: () => globe.play(),
     pause: () => globe.pause(),
     isPlaying: () => globe.isPlaying(),

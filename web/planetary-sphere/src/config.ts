@@ -11,7 +11,12 @@ export interface GlobeOptions {
   showTimeUi: boolean;
   autoAdvanceDaysPerSec: number;
   autoRotateYawRadPerSec: number;
-  showPlayButton: boolean;
+  // Visibility of the playback control buttons (spin + date-advance toggles).
+  showPlaybackButtons: boolean;
+  // Whether each control starts active. Both default to true so the globe
+  // advances the date and gently spins on load.
+  autoAdvanceActive: boolean;
+  autoRotateActive: boolean;
 
   // -- Globe --
   initialViewRaDeg: number;
@@ -104,15 +109,19 @@ export interface GlobeOptions {
 const color = (r: number, g: number, b: number, a = 1): RGBA => ({ r, g, b, a });
 
 export const JD_1453_01_01 = 2251766.5;
+// 29 May 1453 (Julian calendar) -- the fall of Constantinople.
+export const JD_1453_05_29 = 2251914.5;
 
 export const DEFAULT_OPTIONS: GlobeOptions = {
   // Time
-  fixedJulianDate: JD_1453_01_01,
+  fixedJulianDate: JD_1453_05_29,
   initialDayOffset: 0.0,
   showTimeUi: true,
   autoAdvanceDaysPerSec: 3.0,
   autoRotateYawRadPerSec: 0.04,
-  showPlayButton: true,
+  showPlaybackButtons: true,
+  autoAdvanceActive: true,
+  autoRotateActive: true,
 
   // Globe (scene: initial_view_dec_deg -35, globe_scale_factor 0.7, globe_zoom 1.4;
   // globe_zoom nudged down to 1.37 here so the disk fits a centered, zero-margin square
