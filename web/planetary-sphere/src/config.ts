@@ -155,11 +155,11 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
 
   // Fake lighting -- cool pale key from the upper-left, tuned for the dark navy fill.
   showGlobeShading: true,
-  globeLightDir: { x: -0.55, y: -0.8 },
+  globeLightDir: { x: -0.55, y: -0.2 },
   globeLightColor: color(0.7, 0.82, 1.0),
   globeHighlightStrength: 0.08,
   globeShadowStrength: 0.4,
-  globeRimStrength: 0.12,
+  globeRimStrength: 0.08,
 
   // Selection
   enableConstellationSelection: true,
