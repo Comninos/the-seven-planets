@@ -784,6 +784,12 @@ export class CelestialGlobe {
     // 2. Globe disk.
     this.drawGlobeDisk(ctx, center, radius);
 
+    // 2b. Fake spherical shading (limb darkening + offset diffuse hotspot), drawn
+    // under the celestial content so overlays read as lying on the lit surface.
+    if (this.opts.showGlobeShading) {
+      this.drawGlobeShading(ctx, center, radius);
+    }
+
     // 3. Ecliptic.
     if (this.opts.showEcliptic) {
       this.drawEcliptic(ctx, center, radius, basis, backdropFade);
@@ -805,6 +811,12 @@ export class CelestialGlobe {
     // 7. Globe outline arc.
     this.strokeCircle(ctx, center, radius, toCssRgba(this.opts.globeOutlineColor), this.opts.globeOutlineWidth);
 
+    // 8. Fake rim / fresnel light hugging the limb, on top of everything so it
+    // brightens the silhouette like a backlit sphere.
+    if (this.opts.showGlobeShading) {
+      this.drawGlobeRim(ctx, center, radius);
+    }
+
     ctx.restore();
   }
 
@@ -813,6 +825,62 @@ export class CelestialGlobe {
     ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
     ctx.fillStyle = toCssRgba(this.opts.globeFillColor);
     ctx.fill();
+  }
+
+  /**
+   * Non-physical shading to sell the spherical form: a concentric limb-darkening that
+   * rounds off the edge plus an offset diffuse hotspot on the lit side. Both are plain
+   * radial gradients clipped to the disk -- no normals, no light math, nothing dynamic.
+   */
+  private drawGlobeShading(ctx: CanvasRenderingContext2D, center: Vec2, radius: number): void {
+    const box = { x: center.x - radius, y: center.y - radius, size: radius * 2 };
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Limb darkening: transparent through the core, ramping to a dark rim.
+    if (this.opts.globeShadowStrength > 0) {
+      const shade = ctx.createRadialGradient(center.x, center.y, radius * 0.35, center.x, center.y, radius);
+      shade.addColorStop(0.0, 'rgba(0, 0, 0, 0)');
+      shade.addColorStop(0.7, 'rgba(0, 0, 0, 0)');
+      shade.addColorStop(1.0, toCssRgba({ r: 0, g: 0, b: 0, a: 1 }, this.opts.globeShadowStrength));
+      ctx.fillStyle = shade;
+      ctx.fillRect(box.x, box.y, box.size, box.size);
+    }
+
+    // Diffuse hotspot: a soft tinted highlight offset toward the light source.
+    if (this.opts.globeHighlightStrength > 0) {
+      const dir = normalizeScreenDir(this.opts.globeLightDir);
+      const hx = center.x - dir.x * radius * 0.45;
+      const hy = center.y - dir.y * radius * 0.45;
+      const hi = ctx.createRadialGradient(hx, hy, 0, hx, hy, radius * 1.15);
+      hi.addColorStop(0.0, toCssRgba(this.opts.globeLightColor, this.opts.globeHighlightStrength));
+      hi.addColorStop(0.55, toCssRgba(this.opts.globeLightColor, 0));
+      ctx.fillStyle = hi;
+      ctx.fillRect(box.x, box.y, box.size, box.size);
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Additive rim/fresnel ring hugging the limb. Fades back to zero exactly at the edge
+   * so it never hardens the silhouette beyond the outline stroke.
+   */
+  private drawGlobeRim(ctx: CanvasRenderingContext2D, center: Vec2, radius: number): void {
+    if (this.opts.globeRimStrength <= 0) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const rim = ctx.createRadialGradient(center.x, center.y, radius * 0.8, center.x, center.y, radius);
+    rim.addColorStop(0.0, toCssRgba(this.opts.globeLightColor, 0));
+    rim.addColorStop(0.92, toCssRgba(this.opts.globeLightColor, this.opts.globeRimStrength));
+    rim.addColorStop(1.0, toCssRgba(this.opts.globeLightColor, 0));
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = rim;
+    ctx.fill();
+    ctx.restore();
   }
 
   private strokeCircle(ctx: CanvasRenderingContext2D, center: Vec2, radius: number, style: string, width: number): void {
@@ -1202,6 +1270,13 @@ export class CelestialGlobe {
 
 function distance(a: Vec2, b: Vec2): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+/** Normalizes a screen-space direction, falling back to straight-up for a zero vector. */
+function normalizeScreenDir(dir: { x: number; y: number }): Vec2 {
+  const len = Math.hypot(dir.x, dir.y);
+  if (len < 1e-6) return { x: 0, y: -1 };
+  return { x: dir.x / len, y: dir.y / len };
 }
 
 function distanceSq(a: Vec2, b: Vec2): number {

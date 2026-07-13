@@ -30,6 +30,22 @@ export interface GlobeOptions {
   uiTopMargin: number;
   uiBottomMargin: number;
 
+  // -- Fake lighting (static, non-physical shading to sell the spherical form) --
+  // Purely cosmetic radial-gradient passes over the disk; nothing here depends on
+  // date, orientation, or a real light source.
+  showGlobeShading: boolean;
+  // Screen-space direction the fake key light comes FROM (x right, y down); the lit
+  // hotspot is offset toward -globeLightDir. Need not be normalized.
+  globeLightDir: { x: number; y: number };
+  // Tint shared by the diffuse hotspot and the rim/fresnel ring.
+  globeLightColor: RGBA;
+  // Alpha of the offset diffuse hotspot on the lit side (0 disables it).
+  globeHighlightStrength: number;
+  // Alpha of the concentric limb darkening that rounds off the edge (0 disables it).
+  globeShadowStrength: number;
+  // Alpha of the additive rim/fresnel ring hugging the limb (0 disables it).
+  globeRimStrength: number;
+
   // -- Selection --
   enableConstellationSelection: boolean;
 
@@ -136,6 +152,14 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   dragSpinFriction: 10.0,
   uiTopMargin: 0.0,
   uiBottomMargin: 0.0,
+
+  // Fake lighting -- cool pale key from the upper-left, tuned for the dark navy fill.
+  showGlobeShading: true,
+  globeLightDir: { x: -0.55, y: -0.8 },
+  globeLightColor: color(0.7, 0.82, 1.0),
+  globeHighlightStrength: 0.14,
+  globeShadowStrength: 0.4,
+  globeRimStrength: 0.22,
 
   // Selection
   enableConstellationSelection: true,
