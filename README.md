@@ -56,4 +56,4 @@ The planetary orbital elements (`orbital_elements.json`) come from NASA/JPL's "K
 
 ## License
 
-This project is released under the [MIT License](LICENSE). The bundled d3-celestial data and derived logic remain under their original BSD (3-Clause) license, as noted above.
+This project is released under the [MIT License](LICENSE). The bundled d3-celestial data remain under their original BSD (3-Clause) license, as noted above.
