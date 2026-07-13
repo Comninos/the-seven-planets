@@ -853,7 +853,7 @@ export class CelestialGlobe {
             ctx,
             labelPos,
             constellation.name || constellation.id,
-            lightened(this.opts.constellationLineColor, 0.1),
+            this.opts.constellationLabelColor,
             this.opts.labelFontSize - 1,
             0.85
           );

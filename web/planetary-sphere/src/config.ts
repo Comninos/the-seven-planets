@@ -58,6 +58,7 @@ export interface GlobeOptions {
   globeOutlineColor: RGBA;
   eclipticColor: RGBA;
   constellationLineColor: RGBA;
+  constellationLabelColor: RGBA;
   starColor: RGBA;
   mercuryColor: RGBA;
   venusColor: RGBA;
@@ -158,10 +159,14 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   // Alpha 0 leaves the canvas transparent so the element's CSS background shows
   // through; set alpha to 1 to have the canvas paint this color itself.
   backgroundColor: color(0.005945804, 0.007432931, 0.019723443, 0.0),
-  globeFillColor: color(0.029687967, 0.029691454, 0.0678673),
+  globeFillColor: color(0.055, 0.056, 0.12),
   globeOutlineColor: color(0.35, 0.42, 0.58, 0.55), // script default (scene doesn't override)
   eclipticColor: color(0.935792, 0.628446, 0.2767423, 1.0),
   constellationLineColor: color(0.54901963, 0.6509804, 0.8509804, 0.38039216),
+  // Cool mid-slate at ~0.52 luminance: sits roughly equidistant from white and
+  // black so the labels stay legible-but-subtle against both light and dark
+  // backdrops. Decoupled from constellationLineColor so it can be tuned freely.
+  constellationLabelColor: color(0.5, 0.52, 0.57, 0.92),
   starColor: color(0.92, 0.95, 1.0), // script default
   mercuryColor: color(0.5178077, 0.53279626, 0.7101363),
   venusColor: color(0.9911694, 0.8943265, 0.4152305),
@@ -186,9 +191,9 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   showStarGlow: true,
   starGlowDiameterScale: 8.0,
   planetRadius: 7.0,
-  sunRadius: 8.0,
-  moonRadius: 8.0,
-  poleMarkerRadius: 8.0, // script default (scene doesn't override)
+  sunRadius: 7.0,
+  moonRadius: 7.0,
+  poleMarkerRadius: 7.0, // script default (scene doesn't override)
   constellationLineWidth: 0.5,
   eclipticLineWidth: 0.5,
   globeOutlineWidth: 0.5,
