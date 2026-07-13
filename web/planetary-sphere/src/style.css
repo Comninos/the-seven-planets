@@ -1,13 +1,9 @@
 :root {
-  /* Widget background. Override this variable (or toggle the color scheme) to
-     re-theme the globe's backdrop; the canvas itself is transparent. */
-  --celestial-globe-background: #010208;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --celestial-globe-background: #eef1f8;
-  }
+  /* Widget background. Defaults to transparent so that when the widget is
+     embedded in an <iframe> the host page's background shows through, letting
+     the host's light/dark theme drive the backdrop. Set this variable to an
+     opaque color to give the widget its own fixed background instead. */
+  --celestial-globe-background: transparent;
 }
 
 html,
