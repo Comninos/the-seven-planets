@@ -1,11 +1,3 @@
----
-date_created: 2026-07-12
----
-<iframe src="https://comninos.github.io/the-seven-planets/"
-        style="width:100%; aspect-ratio:1/1; height:auto; border:none; border-radius:0px;"
-        loading="lazy"></iframe>
-
----
 # The Seven Planets
 
 A map of the night sky. It draws the constellations on a sphere and shows where the seven classical planets are positioned at any date you choose.
