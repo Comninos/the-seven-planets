@@ -159,7 +159,7 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   globeLightColor: color(0.7, 0.82, 1.0),
   globeHighlightStrength: 0.08,
   globeShadowStrength: 0.4,
-  globeRimStrength: 0.010,
+  globeRimStrength: 0.1,
 
   // Selection
   enableConstellationSelection: true,
