@@ -1,13 +1,21 @@
 // Port of reference/scripts/constellation_catalog.gd — loads d3-celestial GeoJSON
 // constellation lines + metadata into the sky-map schema.
 
-import { fposmod } from './math';
+import { fposmod, type RGBA } from './math';
 
 export interface CatalogStar {
   ra: number;
   dec: number;
   mag: number;
+  /** Spectral tint from baked B−V photometry; omitted when lookup has no colour. */
+  color?: RGBA;
 }
+
+/** Baked Hipparcos photometry keyed by "ra.toFixed(4),dec.toFixed(4)". */
+export type StarPhotometryMap = Record<
+  string,
+  { mag: number; r?: number; g?: number; b?: number }
+>;
 
 export type CatalogSegment = [[number, number], [number, number]];
 
@@ -52,13 +60,17 @@ export class ConstellationCatalog {
     metaUrl: string,
     maxRank = 3,
     minDeclinationDeg = -90.0,
-    extractVertexStars = true
+    extractVertexStars = true,
+    photometryUrl: string | null = null
   ): Promise<ConstellationCatalog> {
     const catalog = new ConstellationCatalog();
 
-    const [linesRoot, metaRoot] = await Promise.all([
+    const [linesRoot, metaRoot, photometry] = await Promise.all([
       fetchJson(linesUrl),
       fetchJson(metaUrl),
+      extractVertexStars && photometryUrl
+        ? fetchPhotometry(photometryUrl)
+        : Promise.resolve(null),
     ]);
 
     const metaById = loadMetadata(metaRoot);
@@ -114,7 +126,7 @@ export class ConstellationCatalog {
       }
 
       if (extractVertexStars) {
-        appendVertexStars(entry.stars, segments, minDeclinationDeg);
+        appendVertexStars(entry.stars, segments, minDeclinationDeg, photometry);
       }
     }
 
@@ -136,6 +148,24 @@ async function fetchJson(url: string): Promise<GeoJsonRoot | null> {
     console.error(`ConstellationCatalog: failed to fetch ${url}.`, err);
     return null;
   }
+}
+
+async function fetchPhotometry(url: string): Promise<StarPhotometryMap | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`ConstellationCatalog: failed to fetch ${url} (status ${response.status}).`);
+      return null;
+    }
+    return (await response.json()) as StarPhotometryMap;
+  } catch (err) {
+    console.error(`ConstellationCatalog: failed to fetch ${url}.`, err);
+    return null;
+  }
+}
+
+export function photometryKey(ra: number, dec: number): string {
+  return `${normalizeRaDeg(ra).toFixed(4)},${dec.toFixed(4)}`;
 }
 
 function loadMetadata(root: GeoJsonRoot | null): Map<string, MetaEntry> {
@@ -190,7 +220,8 @@ function segmentsFromCoordinates(lineGroups: unknown[], minDeclinationDeg: numbe
 function appendVertexStars(
   stars: CatalogStar[],
   segments: CatalogSegment[],
-  minDeclinationDeg: number
+  minDeclinationDeg: number,
+  photometry: StarPhotometryMap | null
 ): void {
   const seen = new Set<string>();
   for (const segment of segments) {
@@ -203,12 +234,26 @@ function appendVertexStars(
       if (dec < minDeclinationDeg) {
         continue;
       }
-      const key = `${ra.toFixed(4)},${dec.toFixed(4)}`;
+      const key = photometryKey(ra, dec);
       if (seen.has(key)) {
         continue;
       }
       seen.add(key);
-      stars.push({ ra, dec, mag: 3.0 });
+      const photo = photometry?.[key];
+      const star: CatalogStar = {
+        ra,
+        dec,
+        mag: photo?.mag ?? 3.0,
+      };
+      if (
+        photo &&
+        typeof photo.r === 'number' &&
+        typeof photo.g === 'number' &&
+        typeof photo.b === 'number'
+      ) {
+        star.color = { r: photo.r, g: photo.g, b: photo.b, a: 1 };
+      }
+      stars.push(star);
     }
   }
 }

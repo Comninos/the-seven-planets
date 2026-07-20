@@ -93,7 +93,7 @@ describe('ConstellationCatalog.loadFromD3Celestial', () => {
     }
   });
 
-  it('dedups vertex stars by (ra,dec) rounded to 4 decimals', async () => {
+  it('dedups vertex stars and applies baked photometry (mag + colour)', async () => {
     installFileFetchStub();
     try {
       const catalog = await ConstellationCatalog.loadFromD3Celestial(
@@ -101,16 +101,31 @@ describe('ConstellationCatalog.loadFromD3Celestial', () => {
         'assets/data/constellations.json',
         3,
         -90.0,
-        true
+        true,
+        'assets/data/star_photometry.json'
       );
+      let withColor = 0;
+      let brightCount = 0;
       for (const c of catalog.constellations) {
         const keys = c.stars.map((s) => `${s.ra.toFixed(4)},${s.dec.toFixed(4)}`);
         const uniqueKeys = new Set(keys);
         expect(uniqueKeys.size).toBe(keys.length);
         for (const s of c.stars) {
-          expect(s.mag).toBe(3.0);
+          expect(Number.isFinite(s.mag)).toBe(true);
+          if (s.mag < 2.0) brightCount += 1;
+          if (s.color) {
+            withColor += 1;
+            expect(s.color.r).toBeGreaterThanOrEqual(0);
+            expect(s.color.r).toBeLessThanOrEqual(1);
+            expect(s.color.g).toBeGreaterThanOrEqual(0);
+            expect(s.color.g).toBeLessThanOrEqual(1);
+            expect(s.color.b).toBeGreaterThanOrEqual(0);
+            expect(s.color.b).toBeLessThanOrEqual(1);
+          }
         }
       }
+      expect(withColor).toBeGreaterThan(500);
+      expect(brightCount).toBeGreaterThan(20);
     } finally {
       restoreFetch();
     }

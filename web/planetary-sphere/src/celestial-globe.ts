@@ -97,7 +97,8 @@ export class CelestialGlobe {
 
   private orbitalData: OrbitalData | null = null;
   private catalog: ConstellationCatalog | null = null;
-  private starGlowSprite: HTMLCanvasElement | null = null;
+  /** Per-colour glow sprites, keyed by quantized RGB (avoids rebuilding every star). */
+  private starGlowByColor = new Map<string, HTMLCanvasElement>();
   // Fake-lighting layers pre-rendered once (they never change) and blitted scaled to
   // the disk each frame, so the sphere shading costs one drawImage instead of rebuilding
   // gradients and filling the disk every frame.
@@ -193,7 +194,6 @@ export class CelestialGlobe {
     this.setupInput();
     this.setupResize();
 
-    this.starGlowSprite = buildStarGlowSprite(this.opts.starColor);
     if (this.opts.showGlobeShading) {
       this.globeShadingSprite = buildGlobeShadingSprite(this.opts);
       this.globeRimSprite = buildGlobeRimSprite(this.opts);
@@ -223,7 +223,8 @@ export class CelestialGlobe {
         this.opts.constellationMetaUrl,
         this.opts.maxConstellationRank,
         -90.0,
-        this.opts.showConstellationVertexStars
+        this.opts.showConstellationVertexStars,
+        this.opts.starPhotometryUrl
       ),
     ]);
 
@@ -935,9 +936,14 @@ export class CelestialGlobe {
           if (fade <= 0.0) continue;
           const pos = this.screenFromViewPos(viewPos, center, radius);
           const magnitude = star.mag ?? 3.0;
-          const clampedCoreRadius = clamp((4.2 - magnitude * 0.9) * this.opts.starSizeScale, 1.0, 6.0);
+          const clampedCoreRadius = clamp(
+            (4.2 - magnitude * 0.9) * this.opts.starSizeScale,
+            this.opts.starSizeMin,
+            this.opts.starSizeMax
+          );
           const coreRadius = clampedCoreRadius * starSizeFactor;
-          this.drawStar(ctx, pos, coreRadius, this.opts.starColor, fade);
+          const color = star.color ?? this.opts.starColor;
+          this.drawStar(ctx, pos, coreRadius, color, fade);
         }
       }
 
@@ -1165,17 +1171,28 @@ export class CelestialGlobe {
     }
   }
 
+  private glowSpriteFor(color: RGBA): HTMLCanvasElement {
+    // Quantize to 8-bit channels so the many near-identical BV colours share one sprite.
+    const key = `${Math.round(color.r * 255)},${Math.round(color.g * 255)},${Math.round(color.b * 255)}`;
+    let sprite = this.starGlowByColor.get(key);
+    if (!sprite) {
+      sprite = buildStarGlowSprite(color);
+      this.starGlowByColor.set(key, sprite);
+    }
+    return sprite;
+  }
+
   private drawStar(ctx: CanvasRenderingContext2D, at: Vec2, coreRadius: number, color: RGBA, fade: number): void {
     if (fade <= 0.0) return;
-    if (this.opts.showStarGlow && this.starGlowSprite) {
-      // Pre-rendered 64px radial-gradient sprite tinted with star_color (built once in the
-      // constructor from opts.starColor), blitted at coreRadius * diameterScale with
-      // globalAlpha = fade -- matches _build_star_glow_texture + draw_texture_rect(modulate).
+    if (this.opts.showStarGlow) {
+      // Pre-rendered 64px radial-gradient sprite tinted per star colour, blitted at
+      // coreRadius * diameterScale with globalAlpha = fade.
+      const glow = this.glowSpriteFor(color);
       const diameter = Math.max(coreRadius * this.opts.starGlowDiameterScale, coreRadius + 2.0);
       const half = diameter * 0.5;
       ctx.save();
       ctx.globalAlpha = fade;
-      ctx.drawImage(this.starGlowSprite, at.x - half, at.y - half, diameter, diameter);
+      ctx.drawImage(glow, at.x - half, at.y - half, diameter, diameter);
       ctx.restore();
     }
     ctx.beginPath();

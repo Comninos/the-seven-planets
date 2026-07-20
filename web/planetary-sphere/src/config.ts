@@ -53,6 +53,8 @@ export interface GlobeOptions {
   orbitalDataUrl: string;
   constellationLinesUrl: string;
   constellationMetaUrl: string;
+  // Baked mag + RGB for constellation vertex stars (from Hipparcos via d3-celestial).
+  starPhotometryUrl: string;
   maxConstellationRank: number;
   showConstellationLines: boolean;
   showConstellationVertexStars: boolean;
@@ -93,6 +95,10 @@ export interface GlobeOptions {
 
   // -- Sizes --
   starSizeScale: number;
+  // Core radius clamp (px, before zoom/viewport scaling). Caps bright stars without
+  // shrinking the faint ones that already sit on the floor.
+  starSizeMin: number;
+  starSizeMax: number;
   starZoomSizeExponent: number;
   starScreenSizeExponent: number;
   showStarGlow: boolean;
@@ -168,6 +174,7 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   orbitalDataUrl: 'assets/data/orbital_elements.json',
   constellationLinesUrl: 'assets/data/constellations.lines.json',
   constellationMetaUrl: 'assets/data/constellations.json',
+  starPhotometryUrl: 'assets/data/star_photometry.json',
   maxConstellationRank: 3,
   showConstellationLines: true,
   showConstellationVertexStars: true,
@@ -215,6 +222,8 @@ export const DEFAULT_OPTIONS: GlobeOptions = {
   // Sizes (scene: star_size_scale 1.0, star_glow_diameter_scale 8.0, planet_radius 7,
   // sun_radius 8, moon_radius 8, line widths 0.5, label_font_size 22)
   starSizeScale: 1.0,
+  starSizeMin: 1.0,
+  starSizeMax: 3.0,
   // Gently scales constellation star core radius by userZoom^starZoomSizeExponent so stars
   // don't stay a fixed pixel size across the 0.6-4.0 zoom range (no-op at userZoom=1).
   starZoomSizeExponent: 0.4,

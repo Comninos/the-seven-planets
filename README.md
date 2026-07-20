@@ -26,7 +26,7 @@ This is meant to be an intuitive, attractive overview, not a precise map. The li
 - **Approximate planet positions.** The orbital-element method is only good to roughly arc-minute accuracy near our own era, and it drifts as you move away from the year 2000. The further back or forward in time you go, the less trustworthy the planet positions become.
 - **Low-precision Moon.** The Moon uses a short formula accurate to only about a tenth of a degree (a few times the Moon's own width). It's fine for showing which constellation the Moon is near.
 - **Fixed stars.** The constellations are drawn at their year-2000 (J2000) positions and do not account for the precession, a perceived shift in star positions caused by the wobble of Earth's axis. 
-- **Simplified star set.** Only the stars that form the constellation line figures are drawn (with a fixed nominal brightness), not a full star catalogue.
+- **Simplified star set.** Only the stars that form the constellation line figures are drawn, not a full star catalogue. Brightness and colour for those stars come from a static Hipparcos-derived lookup (via d3-celestial).
 
 ## The widget (`web/planetary-sphere/`)
 
@@ -55,11 +55,14 @@ Specifically:
 
 - `constellations.lines.json`: the star-to-star lines that make up each constellation figure, from d3-celestial.
 - `constellations.json`: constellation names and ranking, from d3-celestial.
+- `star_photometry.json`: apparent magnitude and B−V colour index for each constellation vertex star, taken from d3-celestial's star catalogue (`stars.8.json`) and baked to RGB with d3-celestial's B−V colour scale. Regenerate with `npm run bake-star-photometry`.
 
-Both files use positions at the J2000 epoch, with right ascension expressed as longitude from −180° to 180° (the GeoJSON convention used by d3-celestial). The approach to loading, clipping, projecting, and drawing this sky data also follows d3-celestial's design.
+Those constellation and star files use positions at the J2000 epoch, with right ascension expressed as longitude from −180° to 180° (the GeoJSON convention used by d3-celestial). The approach to loading, clipping, projecting, and drawing this sky data also follows d3-celestial's design.
+
+Stellar magnitudes and B−V values originate from **XHIP: An Extended Hipparcos Compilation** (Anderson E., Francis C., 2012), [VizieR V/137D](http://cdsarc.u-strasbg.fr/viz-bin/Cat?V/137D), as packaged by d3-celestial.
 
 The planetary orbital elements (`orbital_elements.json`) come from NASA/JPL's "Keplerian Elements for Approximate Positions of the Major Planets." The Moon and coordinate conversions follow the standard low-precision formulas from Jean Meeus's *Astronomical Algorithms*.
 
 ## License
 
-This project is released under the [MIT License](LICENSE). The bundled d3-celestial data remain under their original BSD (3-Clause) license.
+This project is released under the [MIT License](LICENSE). The bundled d3-celestial constellation and star data remain under their original BSD (3-Clause) license.
